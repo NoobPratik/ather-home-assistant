@@ -1,41 +1,59 @@
 # Ather Energy Custom Integration for Home Assistant
 
-Stream live, real-time telemetry metrics from your Ather smart scooter directly into Home Assistant over native WebSockets. No external MQTT bridges or companion scripts required.
+This is a custom Home Assistant integration that connects directly to your Ather smart scooter over native WebSockets to stream live, real-time data. No need for clumsy MQTT setups, external bridges, or companion scripts.
 
-## Features Included
-* **Real-Time Push Streams:** Telemetry updates instantly the millisecond your vehicle transitions states (Riding, Sleeping, Charging).
-* **15+ Native Entities:** Monitors Battery State-of-Charge, Estimated Mode Range, Odometer tracking, Active Charging types, and semantic Binary Sensor troubleshooting alerts.
-* **Live Device Mapping:** Generates a real-time `device_tracker` entity providing latitude, longitude, and accuracy updates straight to your Lovelace Map cards.
-* **Advanced Entity Categories:** Diagnostic parameters (Software Versions, Privacy Toggles) are correctly bucketed into system diagnostic tabs to keep your main dashboard clean.
+## What it tracks
+* **Real-Time Data:** Telemetry updates instantly the second your scooter changes states (e.g., switching from Sleeping to Riding or Charging).
+* **15+ Sensors:** Keeps tabs on your Battery State-of-Charge (SoC), estimated range for different riding modes, odometer, charging types, and system alerts.
+* **Live Mapping:** Provides a `device_tracker` entity so you can see your scooter's live location (latitude, longitude, and accuracy) right on your Home Assistant map cards.
+* **Clean Organization:** Diagnostic info (like software versions and privacy toggles) are automatically hidden away in diagnostic tabs so they don't clutter your main dashboard.
 
-## Cryptographic Architecture & Disclaimer
-This custom integration interacts directly with internal cloud endpoints utilizing standard dynamic reverse-engineered API signatures. To validate application authenticity against Google Firebase security gates during initialization, the integration utilizes the public cryptographic production signature fingerprint derived from the authoritative Android package archive (`com.athermobileapp`).
+## 🔒 Privacy & Data Security
+Your data belongs to you. This integration runs entirely locally on your Home Assistant instance. **No data is ever stored, collected, or tracked by any third-party services.** All communication happens strictly and directly between your Home Assistant hardware and the official Ather cloud servers.
 
-*Disclaimer: This project is an independent community development and is not officially affiliated with or endorsed by Ather Energy.*
+## ⚠️ Disclaimer & Current State
+**This is a very early, experimental, and fragile build.** Because this integration relies on reverse-engineered API signatures to communicate with Ather's cloud (including working around Google Firebase gates via the mobile app's signature), **it can break at any time** if Ather changes their backend. 
+
+Please use this with that expectation in mind! 
+
+*This project is an independent community development and is not officially affiliated with or endorsed by Ather Energy.*
+
+## 🛵 Supported Models & Call for Testers!
+Right now, this integration has **only been tested on the Ather 450X**, as that is the only vehicle I own. 
+
+While Ather uses a unified mobile app backend, I am currently unsure if other models—like the **Ather Rizta, 450 Apex, or older generations of the 450/450X**—send the exact same telemetry data layout. 
+
+If you own a Rizta, Apex, or an older 450 model and want to help make this integration work flawlessly for everyone:
+1. Try installing it and see what works or breaks.
+2. Open an Issue with your vehicle model and any logs or data anomalies you notice.
+3. Sharing your anonymized data layouts/payloads will help me expand and fix the script for all models!
+
+## 🤝 Contributions & Feedback Welcome!
+Since this is an early build, things will break, and there is plenty of room for improvement. If you find a bug, have a feature suggestion, or want to help improve the code:
+* Please feel free to **open an Issue** or submit a **Pull Request (PR)**. 
+* All feedback, suggestions, and code improvements are incredibly welcome!
 
 ## Installation Instructions
 
 ### Method 1: HACS Custom Repository (Recommended)
-Because this integration is not yet indexed in the default HACS store, you can easily add it as a custom repository:
+Since this integration isn't in the official HACS default store yet, you can easily add it manually:
 
-1. Ensure the **HACS** custom component is active in your Home Assistant ecosystem.
-2. Open **HACS** ➔ Navigate to the **Integrations** tab.
-3. Click the **three dots menu** in the top right corner and select **Custom Repositories**.
-4. Paste this repository URL: `https://github.com/pratik2296/ather-home-assistant`
+1. Make sure you have **HACS** installed and working.
+2. Open **HACS** ➔ Go to the **Integrations** tab.
+3. Click the **three dots menu** in the top right corner and click **Custom Repositories**.
+4. Paste this repository URL: `https://github.com/NoobPratik/ather-home-assistant`
 5. Select **Integration** as the Category and click **Add**.
-6. The "Ather Energy" card will appear. Click **Download**.
-7. **Restart** Home Assistant completely.
+6. Click **Download** on the Ather Energy card that pops up.
+7. **Restart** Home Assistant.
 
 ### Method 2: Manual Installation
-1. Download the latest source package release archive from GitHub.
-2. Extract the payload and copy the nested `custom_components/ather/` folder directly into your instance's internal server directory `/config/custom_components/`.
-3. **Restart** Home Assistant completely.
+1. Download the latest source code ZIP from this repository.
+2. Extract it and copy the `ather` folder (found inside `custom_components/`) into your Home Assistant server's `/config/custom_components/` directory.
+3. **Restart** Home Assistant.
 
 ## Initial Configuration
-1. Navigate to **Settings** ➔ **Devices & Services** ➔ **Add Integration**.
-2. Search and select **Ather Energy**.
-3. A native UI Config Flow panel will prompt for your details:
-   * **Phone Number:** Enter your registered account mobile number.
-4. Click **Submit**. A secondary verification card will populate.
-5. Input the automated SMS **OTP** (One-Time Password) received on your personal device.
-6. Click **Submit**. The integration will automatically discover your vehicle's unique VIN, allocate database shards, and generate your dashboard entities instantly.
+1. In Home Assistant, go to **Settings** ➔ **Devices & Services** ➔ **Add Integration**.
+2. Search for and select **Ather Energy**.
+3. Type in your registered Ather account **Phone Number** and hit Submit.
+4. You will receive an automated SMS **OTP** (One-Time Password) on your phone. Enter it into the next box and click Submit.
+5. The integration will automatically find your scooter's VIN and spin up all your dashboard entities instantly!
