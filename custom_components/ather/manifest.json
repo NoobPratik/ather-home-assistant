@@ -1,0 +1,10 @@
+{
+  "domain": "ather",
+  "name": "Ather Energy",
+  "codeowners": ["@pratik2296"],
+  "config_flow": true,
+  "dependencies": [],
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "version": "1.0.0"
+}

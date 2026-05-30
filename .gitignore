@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Home Assistant local testing artifacts
+.HA_DATA/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
