@@ -1,7 +1,7 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import DOMAIN, CONF_PHONE, CONF_ATHER_TOKEN, CONF_SCOOTER_UUID, CONF_VIN, BASE_URL, HEADERS_BASE
+from .const import DOMAIN, CONF_PHONE, CONF_ATHER_TOKEN, CONF_SCOOTER_UUID, CONF_VIN, CONF_MODEL, BASE_URL, HEADERS_BASE
 
 class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -32,7 +32,7 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_otp(self, user_input=None):
-        """Step 2: Ask for OTP and fetch tokens."""
+        """Step 2: Ask for OTP, fetch tokens, and resolve scooter model."""
         errors = {}
         if user_input is not None:
             otp = user_input["otp"]
@@ -44,7 +44,6 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if data.get("status") == "success":
                     ather_token = data["token"]
                     
-                    # Fetch Scooter Data silently
                     auth_headers = HEADERS_BASE.copy()
                     auth_headers["Authorization"] = f"Bearer {ather_token}"
                     
@@ -55,14 +54,16 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     async with session.get(f"{BASE_URL}/api/v1/devices/shadows/scooters/properties", headers=auth_headers, params={"uuid": scooter_uuid, "state": "reported"}) as props_resp:
                         props = (await props_resp.json()).get("data", {})
                         vin = props.get("vin", "Unknown_VIN")
+                        scooter_model = props.get("model_type", "EV Scooter").strip()
 
                     return self.async_create_entry(
-                        title=f"Ather 450X ({vin})",
+                        title=f"Ather {scooter_model} ({vin})",
                         data={
                             CONF_PHONE: self.phone,
                             CONF_ATHER_TOKEN: ather_token,
                             CONF_SCOOTER_UUID: scooter_uuid,
-                            CONF_VIN: vin
+                            CONF_VIN: vin,
+                            CONF_MODEL: scooter_model
                         }
                     )
                 else:

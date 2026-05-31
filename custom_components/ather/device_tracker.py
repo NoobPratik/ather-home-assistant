@@ -1,16 +1,18 @@
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
-from .const import DOMAIN, CONF_VIN
+from .const import DOMAIN, CONF_VIN, CONF_MODEL
 
 async def async_setup_entry(hass, entry, async_add_entities):
     vin = entry.data[CONF_VIN]
-    async_add_entities([AtherDeviceTracker(vin)])
+    model = entry.data.get(CONF_MODEL, "EV Scooter")
+    async_add_entities([AtherDeviceTracker(vin, model)])
 
 class AtherDeviceTracker(TrackerEntity):
-    def __init__(self, vin):
+    def __init__(self, vin, model):
         self._vin = vin
-        self._attr_name = "Ather 450X Location"
+        self._model = model
+        self._attr_name = f"Ather {model} Location"
         self._attr_unique_id = f"ather_{vin}_location"
         self._latitude = None
         self._longitude = None
@@ -18,7 +20,12 @@ class AtherDeviceTracker(TrackerEntity):
 
     @property
     def device_info(self):
-        return {"identifiers": {(DOMAIN, self._vin)}, "name": "Ather 450X"}
+        return {
+            "identifiers": {(DOMAIN, self._vin)},
+            "name": f"Ather {self._model}",
+            "manufacturer": "Ather Energy",
+            "model": self._model
+        }
 
     @property
     def latitude(self): return self._latitude

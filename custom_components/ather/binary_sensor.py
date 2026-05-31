@@ -1,19 +1,21 @@
-from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
-from .const import DOMAIN, CONF_VIN, BINARY_SENSORS_META
+from .const import DOMAIN, CONF_VIN, CONF_MODEL, BINARY_SENSORS_META
 
 async def async_setup_entry(hass, entry, async_add_entities):
     vin = entry.data[CONF_VIN]
-    async_add_entities([AtherBinarySensor(vin, key, meta) for key, meta in BINARY_SENSORS_META.items()])
+    model = entry.data.get(CONF_MODEL, "EV Scooter")
+    async_add_entities([AtherBinarySensor(vin, model, key, meta) for key, meta in BINARY_SENSORS_META.items()])
 
 class AtherBinarySensor(BinarySensorEntity):
-    def __init__(self, vin, key, meta):
+    def __init__(self, vin, model, key, meta):
         self._vin = vin
+        self._model = model
         self._key = key
         self._parent = meta["parent"]
         self._on_value = meta["on_value"]
-        self._attr_name = f"Ather 450X {meta['name']}"
+        self._attr_name = f"Ather {model} {meta['name']}"
         self._attr_unique_id = f"ather_{vin}_{key}"
         self._attr_device_class = meta["class"]
         self._attr_icon = meta["icon"]
@@ -21,7 +23,12 @@ class AtherBinarySensor(BinarySensorEntity):
 
     @property
     def device_info(self):
-        return {"identifiers": {(DOMAIN, self._vin)}, "name": "Ather 450X"}
+        return {
+            "identifiers": {(DOMAIN, self._vin)},
+            "name": f"Ather {self._model}",
+            "manufacturer": "Ather Energy",
+            "model": self._model
+        }
 
     @property
     def is_on(self):

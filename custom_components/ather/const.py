@@ -3,6 +3,7 @@ CONF_PHONE = "phone"
 CONF_ATHER_TOKEN = "ather_token"
 CONF_SCOOTER_UUID = "scooter_uuid"
 CONF_VIN = "vin"
+CONF_MODEL = "model"
 
 BASE_URL = "https://cerberus.ather.io"
 WS_ENDPOINT = "wss://cerberus.ather.io/api/v1/ws/devices/shadows/onchange"
