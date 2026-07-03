@@ -19,6 +19,7 @@ Connects directly to your Ather scooter over native WebSockets to stream live, r
 - ✅ **15+ Sensors** — Battery SOC, estimated range (per ride mode), odometer, tyre pressure, charging status, ride mode, and more
 - ✅ **Live Location Tracking** — `device_tracker` entity for real-time GPS position on your map
 - ✅ **Binary Sensors** — Alerts for incognito mode, smart eco, charger connection, and low tyre pressure
+- ✅ **Service Tracking** — Log your last service odometer reading and get an automatic countdown to your next service
 - ✅ **Automatic Reconnection** — WebSocket auto-reconnects on drop; triggers re-auth if token expires
 - ✅ **Simple Setup** — Phone number + OTP, auto-detects VIN and scooter model
 
@@ -28,33 +29,55 @@ Connects directly to your Ather scooter over native WebSockets to stream live, r
 
 ### Numerical Sensors
 
-| Sensor | Unit | Description |
-|--------|------|-------------|
-| Battery Level | % | Current battery state of charge |
-| Estimated Range | km | Predicted range for current riding mode |
-| Odometer | km | Total distance travelled |
-| Vehicle State | | Current state (Sleeping, Riding, Charging, etc.) |
-| Active Ride Mode | | Eco, Ride, Sport, Warp, etc. |
-| Front Tyre Pressure | psi | Front tyre pressure |
-| Rear Tyre Pressure | psi | Rear tyre pressure |
-| Charging Status | | Charging state (Charging, Not Charging, etc.) |
-| Charger Type | | Type of charger connected |
+| Sensor              | Unit | Description                                                                 |
+| ------------------- | ---- | --------------------------------------------------------------------------- |
+| Battery Level       | %    | Current battery state of charge                                             |
+| Estimated Range     | km   | Predicted range for current riding mode                                     |
+| Odometer            | km   | Total distance travelled                                                    |
+| Vehicle State       |      | Current state (Sleeping, Riding, Charging, etc.)                            |
+| Active Ride Mode    |      | Eco, Ride, Sport, Warp, etc.                                                |
+| Front Tyre Pressure | psi  | Front tyre pressure                                                         |
+| Rear Tyre Pressure  | psi  | Rear tyre pressure                                                          |
+| Charging Status     |      | Charging state (Charging, Not Charging, etc.)                               |
+| Charger Type        |      | Type of charger connected                                                   |
+| Next Service At     | km   | Odometer reading at which your next service is due (last service + 5000 km) |
+| Next Service After  | km   | Distance remaining until your next service is due                           |
 
 ### Binary Sensors
 
-| Sensor | Description |
-|--------|-------------|
-| Incognito Mode | Privacy mode active |
-| Smart Eco Mode | Smart Eco assist active |
-| Charger Connected | Charger physically plugged in |
+| Sensor               | Description                         |
+| -------------------- | ----------------------------------- |
+| Incognito Mode       | Privacy mode active                 |
+| Smart Eco Mode       | Smart Eco assist active             |
+| Charger Connected    | Charger physically plugged in       |
 | Front Tyre Low Alert | Front tyre pressure below threshold |
-| Rear Tyre Low Alert | Rear tyre pressure below threshold |
+| Rear Tyre Low Alert  | Rear tyre pressure below threshold  |
 
 ### Device Tracker
 
-| Entity | Description |
-|--------|-------------|
+| Entity         | Description                               |
+| -------------- | ----------------------------------------- |
 | Ather Location | Real-time GPS coordinates of your scooter |
+
+### Button
+
+| Entity           | Description                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Record Servicing | Press after a service to log the current odometer reading as your last service point |
+
+### Number
+
+| Entity          | Unit | Description                                                                                  |
+| --------------- | ---- | -------------------------------------------------------------------------------------------- |
+| Last Service At | km   | Odometer reading at your last service. Editable, and persists across Home Assistant restarts |
+
+---
+
+## 🔧 Service Tracking
+
+Press **Record Servicing** right after your scooter's serviced to log the current odometer reading. The integration then tracks your next due service based on Ather's standard 5000 km interval, and the **Next Service After** sensor shows how far you have left.
+
+You can also manually set or correct the **Last Service At** value at any time using its number entity — handy if you're onboarding the integration after already having some service history.
 
 ---
 
@@ -68,7 +91,7 @@ Your data belongs to you. This integration runs entirely locally on your Home As
 
 This integration is **not affiliated with, endorsed by, or sponsored by Ather Energy.** It uses reverse-engineered API signatures and can break at any time if Ather changes their backend.
 
-*This is an independent community project.*
+_This is an independent community project._
 
 ---
 
@@ -110,12 +133,12 @@ Since this integration isn't in the default HACS store yet, add it as a custom r
 
 ## 🛵 Supported Models
 
-| Model | Status |
-|-------|--------|
-| Ather 450X | ✅ Tested |
-| Ather Rizta | ⚠️ Untested — likely works |
-| Ather 450 Apex | ⚠️ Untested — likely works |
-| Ather 450 (Gen 1/2) | ⚠️ Untested — unknown |
+| Model               | Status                     |
+| ------------------- | -------------------------- |
+| Ather 450X          | ✅ Tested                  |
+| Ather Rizta         | ⚠️ Untested — likely works |
+| Ather 450 Apex      | ⚠️ Untested — likely works |
+| Ather 450 (Gen 1/2) | ⚠️ Untested — unknown      |
 
 If you own a different model, please [open an issue](https://github.com/NoobPratik/ather-home-assistant/issues) with logs and data payloads to help expand compatibility!
 
@@ -135,14 +158,14 @@ If you own a different model, please [open an issue](https://github.com/NoobPrat
 ```
 Ather Cloud (WebSocket) ← → Home Assistant
         ↓
-  AtherDataCoordinator (in-memory cache)
+  AtherDataCoordinator (in-memory cache + persistent service data)
         ↓
-  Sensors / Binary Sensors / Device Tracker
+  Sensors / Binary Sensors / Device Tracker / Button / Number
         ↓
   Dispatcher updates all entities in real-time
 ```
 
-Data is pushed from Ather's cloud via WebSocket the instant your scooter changes state — no polling required.
+Data is pushed from Ather's cloud via WebSocket the instant your scooter changes state — no polling required. Service tracking data (last service odometer reading) is separately persisted to disk so it survives Home Assistant restarts.
 
 ---
 
@@ -167,4 +190,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-*If you find this integration useful, please consider giving it a star on GitHub!*
+_If you find this integration useful, please consider giving it a star on GitHub!_
