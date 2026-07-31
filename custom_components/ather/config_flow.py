@@ -20,7 +20,12 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.phone = user_input[CONF_PHONE]
             session = async_get_clientsession(self.hass)
             
-            payload = {"contact_no": self.phone, "country_code": self.country_code, "email": "", "notification_medium": {"sms": True, "whatsapp": False}}
+            payload = {
+                "contact_no": self.phone, 
+                "country_code": self.country_code, 
+                "email": "", 
+                "notification_medium": {"sms": True, "whatsapp": False}
+            }
             
             try:
                 async with session.post(f"{BASE_URL}/auth/v2/generate-login-otp", json=payload, headers=HEADERS_BASE, timeout=10) as resp:
@@ -50,7 +55,13 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             otp = user_input["otp"]
             session = async_get_clientsession(self.hass)
             
-            payload = {"contact_no": self.phone, "country_code": self.country_code, "email": "", "userOtp": otp, "is_mobile_login": True}
+            payload = {
+                "contact_no": self.phone, 
+                "country_code": self.country_code, 
+                "email": "", 
+                "userOtp": otp, 
+                "is_mobile_login": True
+            }
             
             try:
                 async with session.post(f"{BASE_URL}/auth/v2/verify-login-otp", json=payload, headers=HEADERS_BASE, timeout=10) as resp:
@@ -73,14 +84,14 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                     return self.async_abort(reason="no_scooters_found")
                                 
                                 if len(scooters) > 1:
-                                    _LOGGER.warning("Multiple scooters detected. Setting up the primary scooter: %s", scooters[0].get("scooter"))
+                                    _LOGGER.warning("Multiple scooters detected. Setting up primary: %s", scooters[0].get("scooter"))
                                 
                                 scooter_uuid = scooters[0].get("scooter_uuid")
-                                
+                            
                             async with session.get(f"{BASE_URL}/api/v1/devices/shadows/scooters/properties", headers=auth_headers, params={"uuid": scooter_uuid, "state": "reported"}, timeout=10) as props_resp:
                                 if props_resp.status != 200:
                                     return self.async_show_form(step_id="otp", errors={"base": "api_error"})
-                                    
+                                
                                 props = (await props_resp.json()).get("data", {})
                                 vin = props.get("vin", "Unknown_VIN")
                                 scooter_model = props.get("model_type", "EV Scooter").strip()
@@ -124,6 +135,5 @@ class AtherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(self, entry_data):
-        """Triggered automatically by __init__.py if the token expires."""
         self.phone = entry_data[CONF_PHONE]
         return await self.async_step_user()

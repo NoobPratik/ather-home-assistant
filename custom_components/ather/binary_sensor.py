@@ -7,7 +7,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     vin = entry.data[CONF_VIN]
     model = entry.data.get(CONF_MODEL, "EV Scooter")
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtherBinarySensor(vin, model, key, meta, coordinator) for key, meta in BINARY_SENSORS_META.items()])
+    
+    async_add_entities([
+        AtherBinarySensor(vin, model, key, meta, coordinator) 
+        for key, meta in BINARY_SENSORS_META.items()
+    ])
 
 class AtherBinarySensor(BinarySensorEntity):
     def __init__(self, vin, model, key, meta, coordinator):
@@ -17,6 +21,7 @@ class AtherBinarySensor(BinarySensorEntity):
         self._parent = meta["parent"]
         self._on_value = meta["on_value"]
         self._coordinator = coordinator
+        
         self._attr_name = f"Ather {model} {meta['name']}"
         self._attr_unique_id = f"ather_{vin}_{key}"
         self._attr_device_class = meta["class"]
@@ -33,7 +38,7 @@ class AtherBinarySensor(BinarySensorEntity):
         }
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         return self._is_on
 
     async def async_added_to_hass(self):
@@ -57,9 +62,8 @@ class AtherBinarySensor(BinarySensorEntity):
                     self._is_on = True
             else:
                 self._is_on = False
-        
         elif self._parent in cache and self._key in cache[self._parent]:
             val = cache[self._parent][self._key]
             self._is_on = (val == self._on_value)
-        
+
         self.async_write_ha_state()

@@ -5,12 +5,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import Store
-
-from .const import DOMAIN, CONF_ATHER_TOKEN, CONF_SCOOTER_UUID, CONF_VIN, WS_ENDPOINT, HEADERS_BASE
+from .const import (
+    DOMAIN, 
+    CONF_ATHER_TOKEN, 
+    CONF_SCOOTER_UUID, 
+    CONF_VIN, 
+    BASE_URL, 
+    WS_ENDPOINT, 
+    HEADERS_BASE
+)
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "button", "number"]
+
+PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "button", "switch"]
 
 class AtherDataCoordinator:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
@@ -20,26 +27,49 @@ class AtherDataCoordinator:
             "telemetry.bike": {},
             "telemetry.charging": {},
             "telemetry.tpms": {},
-            "service": {"last_service_at": None}
+            "scooters.remote_charging": {},
+            "scooters.ping_my_scooter": {},
+            "scooters.remote_shutdown": {},
+            "app.ather_stack_features": {}
         }
         self.last_synced_time = 0
         self.vin = entry.data[CONF_VIN]
+        self.scooter_uuid = entry.data[CONF_SCOOTER_UUID]
+        self.token = entry.data[CONF_ATHER_TOKEN]
         self.signal_name = f"{DOMAIN}_update_{self.vin}"
-        self._store = Store(hass, 1, f"{DOMAIN}_last_service_{self.vin}")
 
-    async def async_restore_last_service(self):
-        stored = await self._store.async_load()
-        if stored and isinstance(stored, dict) and "last_service_at" in stored:
-            self.data["service"]["last_service_at"] = stored["last_service_at"]
+    async def async_send_shadow_command(self, shadow_key: str, shadow_payload: dict) -> bool:
+        """Send a mutation command to the Ather Device Shadow endpoint."""
+        session = async_get_clientsession(self.hass)
+        url = f"{BASE_URL}/api/v1/devices/shadows/scooters?uuid={self.scooter_uuid}"
+        
+        headers = HEADERS_BASE.copy()
+        headers["Authorization"] = f"Bearer {self.token}"
 
-    async def async_persist_last_service(self):
-        val = self.data.get("service", {}).get("last_service_at")
-        await self._store.async_save({"last_service_at": val})
+        payload = {
+            "state": {
+                "desired": {
+                    shadow_key: shadow_payload
+                }
+            },
+            "request_id": f"ma_{self.scooter_uuid}"
+        }
+
+        try:
+            async with session.post(url, json=payload, headers=headers, timeout=10) as resp:
+                if resp.status == 200:
+                    _LOGGER.info("Successfully executed %s command for Ather scooter", shadow_key)
+                    return True
+                else:
+                    _LOGGER.error("Failed to execute %s. Status code: %s", shadow_key, resp.status)
+                    return False
+        except Exception as err:
+            _LOGGER.error("Error executing %s command: %s", shadow_key, err)
+            return False
 
     def update_data(self, delta_data):
         bike_data = delta_data.get("telemetry.bike", {})
         new_timestamp = bike_data.get("last_synced_time")
-
         if new_timestamp:
             try:
                 ts = int(new_timestamp)
@@ -56,16 +86,12 @@ class AtherDataCoordinator:
 
         async_dispatcher_send(self.hass, self.signal_name)
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     coordinator = AtherDataCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    await coordinator.async_restore_last_service()
     
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
     coordinator.loop_task = hass.loop.create_task(ather_websocket_loop(hass, entry, coordinator))
     return True
 
@@ -90,13 +116,19 @@ async def ather_websocket_loop(hass: HomeAssistant, entry: ConfigEntry, coordina
         try:
             async with session.ws_connect(url, headers=headers, heartbeat=30) as ws:
                 _LOGGER.info("Connected to Ather WebSocket!")
-                await ws.send_json({"paths": ["telemetry.bike", "telemetry.charging", "telemetry.tpms"]})
+                await ws.send_json({
+                    "paths": [
+                        "telemetry.bike", 
+                        "telemetry.charging", 
+                        "telemetry.tpms",
+                        "app.ather_stack_features"
+                    ]
+                })
                 
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         data = msg.json()
                         coordinator.update_data(data)
-                        
                     elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                         _LOGGER.warning("Ather WebSocket closed. Code: %s", ws.close_code)
                         if ws.close_code in [401, 403, 4000, 4001]:
@@ -104,7 +136,6 @@ async def ather_websocket_loop(hass: HomeAssistant, entry: ConfigEntry, coordina
                             entry.async_start_reauth(hass)
                             return
                         break
-                        
         except aiohttp.WSServerHandshakeError as e:
             _LOGGER.error("WebSocket Handshake Error (Status %s). Token might be expired.", e.status)
             if e.status in [401, 403]:

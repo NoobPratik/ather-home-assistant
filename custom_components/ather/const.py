@@ -10,17 +10,17 @@ WS_ENDPOINT = "wss://cerberus.ather.io/api/v1/ws/devices/shadows/onchange"
 FIREBASE_API_KEY = "AIzaSyBj-mQpnmYrd6Cnl6M5RzmP2tcsUZEk4ik"
 
 HEADERS_BASE = {
-    "Source": "ATHER_APP/13.1.0",
+    "Source": "ATHER_APP/13.2.0",
     "X-Platform": "Android",
-    "X-Platform-Version": "11",
-    "X-Device-Info": "Google Pixel 4",
-    "User-Agent": "Android/11 (Google Pixel 4)",
+    "X-Platform-Version": "14",
+    "X-Device-Info": "Google Pixel 8 Pro",
+    "User-Agent": "Ather/13.2.0 android/14 (Google Pixel 8 Pro)",
     "Accept": "application/json",
     "Content-Type": "application/json",
     "Accept-Encoding": "gzip",
 }
 
-# Standard Numerical/String Sensors
+# Standard Numerical & String Sensors
 SENSORS_META = {
     "battery_soc": {"name": "Battery Level", "class": "battery", "unit": "%", "icon": "mdi:battery", "parent": "telemetry.bike"},
     "range": {"name": "Estimated Range", "class": "distance", "unit": "km", "icon": "mdi:map-marker-distance", "parent": "telemetry.bike"},
