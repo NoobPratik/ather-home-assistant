@@ -19,7 +19,6 @@ Connects directly to your Ather scooter over native WebSockets to stream live, r
 - ✅ **15+ Sensors** — Battery SOC, estimated range (per ride mode), odometer, tyre pressure, charging status, ride mode, and more
 - ✅ **Live Location Tracking** — `device_tracker` entity for real-time GPS position on your map
 - ✅ **Binary Sensors** — Alerts for incognito mode, smart eco, charger connection, and low tyre pressure
-- ✅ **Service Tracking** — Log your last service odometer reading and get an automatic countdown to your next service
 - ✅ **Automatic Reconnection** — WebSocket auto-reconnects on drop; triggers re-auth if token expires
 - ✅ **Simple Setup** — Phone number + OTP, auto-detects VIN and scooter model
 
@@ -29,19 +28,18 @@ Connects directly to your Ather scooter over native WebSockets to stream live, r
 
 ### Numerical Sensors
 
-| Sensor              | Unit | Description                                                                 |
-| ------------------- | ---- | --------------------------------------------------------------------------- |
-| Battery Level       | %    | Current battery state of charge                                             |
-| Estimated Range     | km   | Predicted range for current riding mode                                     |
-| Odometer            | km   | Total distance travelled                                                    |
-| Vehicle State       |      | Current state (Sleeping, Riding, Charging, etc.)                            |
-| Active Ride Mode    |      | Eco, Ride, Sport, Warp, etc.                                                |
-| Front Tyre Pressure | psi  | Front tyre pressure                                                         |
-| Rear Tyre Pressure  | psi  | Rear tyre pressure                                                          |
-| Charging Status     |      | Charging state (Charging, Not Charging, etc.)                               |
-| Charger Type        |      | Type of charger connected                                                   |
-| Next Service At     | km   | Odometer reading at which your next service is due (last service + 5000 km) |
-| Next Service After  | km   | Distance remaining until your next service is due                           |
+| Sensor              | Unit | Description                                      |
+| ------------------- | ---- | ------------------------------------------------ |
+| Battery Level       | %    | Current battery state of charge                  |
+| Estimated Range     | km   | Predicted range for current riding mode          |
+| Odometer            | km   | Total distance travelled                         |
+| Vehicle State       |      | Current state (Sleeping, Riding, Charging, etc.) |
+| Active Ride Mode    |      | Eco, Ride, Sport, Warp, etc.                     |
+| Front Tyre Pressure | psi  | Front tyre pressure                              |
+| Rear Tyre Pressure  | psi  | Rear tyre pressure                               |
+| Charging Status     |      | Charging state (Charging, Not Charging, etc.)    |
+| Charger Type        |      | Type of charger connected                        |
+| Total Fuel Savings  | ₹    | Total estimated petrol cost savings in INR       |
 
 ### Binary Sensors
 
@@ -53,31 +51,24 @@ Connects directly to your Ather scooter over native WebSockets to stream live, r
 | Front Tyre Low Alert | Front tyre pressure below threshold |
 | Rear Tyre Low Alert  | Rear tyre pressure below threshold  |
 
+### Switches
+
+| Entity          | Description                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Ping Scooter    | Toggle to ping your scooter                                                                        |
+| Remote Charging | Remotely start or stop charging (active only when the charger is physically connected and powered) |
+
+### Button
+
+| Entity          | Description                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| Remote Shutdown | Remotely power off / shut down the scooter (**irreversible** until turned back on manually on bike) |
+
 ### Device Tracker
 
 | Entity         | Description                               |
 | -------------- | ----------------------------------------- |
 | Ather Location | Real-time GPS coordinates of your scooter |
-
-### Button
-
-| Entity           | Description                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| Record Servicing | Press after a service to log the current odometer reading as your last service point |
-
-### Number
-
-| Entity          | Unit | Description                                                                                  |
-| --------------- | ---- | -------------------------------------------------------------------------------------------- |
-| Last Service At | km   | Odometer reading at your last service. Editable, and persists across Home Assistant restarts |
-
----
-
-## 🔧 Service Tracking
-
-Press **Record Servicing** right after your scooter's serviced to log the current odometer reading. The integration then tracks your next due service based on Ather's standard 5000 km interval, and the **Next Service After** sensor shows how far you have left.
-
-You can also manually set or correct the **Last Service At** value at any time using its number entity — handy if you're onboarding the integration after already having some service history.
 
 ---
 
